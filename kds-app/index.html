@@ -208,4 +208,20 @@
             });
         }
 
+                  async function gotowe(id) 
+        {
+            await fetch(`/api/done/${id}`, { method: 'POST' });  
+            
+            loadOrders();
+        }
+
+        async function gotoweLinia(id) 
+        {
+            await fetch(`/api/done/line/${id}`, { method: 'POST' });
+
+            loadOrders();
+        }
+
+        setInterval(loadOrders, 5000);
+        loadOrders();
 
