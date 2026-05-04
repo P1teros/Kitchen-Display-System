@@ -74,3 +74,6 @@ app.post('/api/done/:id', async (req, res) => {
 });
 
 
+app.listen(3000, () => {
+  console.log('serwer dzialaa na http://localhost:3000');
+});
