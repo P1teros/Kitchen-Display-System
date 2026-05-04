@@ -131,14 +131,14 @@
 
     </style>
 </head>
-
 <body>
 
     <h1>Kitchen Display</h1>
 
     <div id="orders">Ładowanie..</div>
 
-      <script>
+
+    <script>
 
         async function loadOrders() 
         {
@@ -208,7 +208,7 @@
             });
         }
 
-                  async function gotowe(id) 
+        async function gotowe(id) 
         {
             await fetch(`/api/done/${id}`, { method: 'POST' });  
             
@@ -224,4 +224,7 @@
 
         setInterval(loadOrders, 5000);
         loadOrders();
+    </script>
 
+</body>
+</html>
