@@ -138,3 +138,74 @@
 
     <div id="orders">Ładowanie..</div>
 
+      <script>
+
+        async function loadOrders() 
+        {
+            const container = document.getElementById('orders');
+            
+            if (container.innerHTML === 'Ładowanie..') 
+                container.innerHTML = '';
+
+            const response = await fetch('/api/orders');
+            const data = await response.json();
+
+            const grouped = {};
+            data.forEach(row =>  //petla  
+            {   
+                //sprawdzanie czy zamowienie juz istnieje w grouped
+                if (!grouped[row.id_pos_order]) 
+                {
+                    //jesli nie to tworzy je z pusta lista pozycji
+                    grouped[row.id_pos_order] = 
+                    {
+                        name: row.name, //nazwa zamowienia
+                        created_at: row.created_at,
+                        items: [] // r
+                    
+                    }
+                }
+                if (row.item_name) 
+                {
+                    grouped[row.id_pos_order].items.push
+                    ({
+                        name: row.item_name,
+                        parent: row.id_pos_order_line_parent,  // null = główne danie, liczba = modyfikator
+                        id: row.id_pos_order_line //id linii
+                    });
+                } 
+            });
+
+            // usun karty ktorych juz nie ma
+            Array.from(container.children).forEach(karta => {
+                if (!grouped[karta.dataset.id]) karta.remove();
+            });
+
+            // dla kazdego zamowienia stworz kartę lub zaktualizuj
+            Object.entries(grouped).forEach(([id, order]) => {
+                let div = container.querySelector(`[data-id="${id}"]`);
+                
+                if (!div) {
+                    // nowa karta
+                    div = document.createElement('div');
+                    div.className = 'karta';
+                    div.dataset.id = id;
+                    container.appendChild(div);
+                }
+
+                // zawsze aktualizuj zawartosc
+                const orderId = Number(id);
+                div.innerHTML = `
+                    <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer;">
+                        <h2>Zamówienie #${id}</h2>
+                    </div>
+                    <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
+                    <div class="tresc">
+                        <p class="stol">Stół: ${order.name}</p>
+                        ${order.items.map(item => `<p onclick="gotoweLinia(${item.id})" style="cursor:pointer;">${item.name}</p>`).join('')}
+                    </div>
+                `;
+            });
+        }
+
+
