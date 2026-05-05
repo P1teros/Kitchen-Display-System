@@ -223,7 +223,7 @@
                     <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
                     <div class="tresc">
                         <p class="stol">Stół: ${order.name}</p>
-                        ${order.items.map(item => `<p onclick="gotoweLinia(${item.id})" style="cursor:pointer;">${item.name}</p>`).join('')}
+                        ${order.items.map(item => `<p onclick="gotoweLinia(${item.id}, ${orderId})" style="cursor:pointer;">${item.name}</p>`).join('')}
                     </div>
                 `;
             });
