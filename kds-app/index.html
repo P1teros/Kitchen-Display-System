@@ -289,11 +289,12 @@
                         }
                     });
             });
-            // pokazanie wyniku w okienku alert() na razie
+            // pokazanie wyniku w okienku alert()
             let tekst = '';
             Object.entries(summed).forEach(([nazwa, ilosc]) => {
-                // dodaj do tekstu linie z nazwa i iloscia
+                tekst += nazwa + ': ' + ilosc + '\n'; 
             });
+
             alert(tekst);
         }
 
