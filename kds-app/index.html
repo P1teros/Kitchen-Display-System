@@ -119,7 +119,7 @@
 
         .znika
         {
-            animation: fade-out 0.4s ease forwards;
+            animation: fade-out 0.6s ease forwards;
         }
 
         .naglowek 
@@ -245,10 +245,24 @@
 
         }
 
-        async function gotoweLinia(id) 
+        async function gotoweLinia(id,orderId) 
         {
-            await fetch(`/api/done/line/${id}`, { method: 'POST' });
+            await fetch(`/api/done/line/${id}`, { method: 'POST' }); 
 
+            const remaining = document.querySelectorAll(`[data-id="${orderId}"] .tresc p:not(.stol)`);
+
+            if(remaining.length <= 1)
+            {
+                const karta = document.querySelector(`[data-id="${orderId}"]`);
+                
+                if (karta) 
+                {
+                    karta.classList.add('znika');
+                    setTimeout(() => loadOrders(), 400);
+                    return;
+                }
+            }
+                
             loadOrders();
         }
 
