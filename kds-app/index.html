@@ -275,7 +275,7 @@
         function pokazPodsumowanie() 
         {
             const summed = {}; 
-            
+
         // przechodzenie przez grouped i zsumowanie ilosci
             Object.entries(grouped).forEach(([id, order]) => {
                     order.items.forEach(item => {
@@ -287,11 +287,14 @@
                         {
                             summed[item.name] = 1;
                         }
-                        // jesli danie juz jest w summed - dodaj do ilosci
-                        // jesli nie ma - stworz nowy wpis
                     });
             });
-        // pokaz wynik w okienku alert() na razie
+            // pokazanie wyniku w okienku alert() na razie
+            let tekst = '';
+            Object.entries(summed).forEach(([nazwa, ilosc]) => {
+                // dodaj do tekstu linie z nazwa i iloscia
+            });
+            alert(tekst);
         }
 
         /* aktualizuje timery na wszystkich kartach co sekunde */
