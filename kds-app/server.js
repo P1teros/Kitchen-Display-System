@@ -27,11 +27,12 @@ app.get('/api/orders', async (req, res) => {
         l.qty,
         l.id_pos_order_line_parent,
         l.id_pos_order_line
-FROM pos_order o
-LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
-WHERE l.kds_served IS NULL
-AND o.status != 'cancelled'
-ORDER BY o.created_at DESC
+
+    FROM pos_order o
+    LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
+        AND l.kds_served IS NULL
+    WHERE o.status NOT IN ('closed', 'cancelled')
+    ORDER BY o.created_at DESC
     LIMIT 50
     `);
     res.json(rows);
@@ -66,10 +67,11 @@ app.post('/api/done/:id', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        await conn.query(
-            `UPDATE pos_order SET status = 'cancelled' WHERE id_pos_order = ?`,
-            [req.params.id]
-        );
+    await conn.query(
+        `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order = ?; 
+        UPDATE pos_order SET status = 'closed' WHERE id_pos_order = ?`,
+        [req.params.id, req.params.id]
+    );
         res.json({ ok: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
