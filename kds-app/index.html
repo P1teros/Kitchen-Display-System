@@ -180,11 +180,11 @@
                     }
                 }
 
-                if (row.item_name) 
+                if (row.item_name) /*sprawdzanie czy wiersz ma nazwe pozycji (moze byc null jesli zamwienie jest puste)*/
                 {
                     grouped[row.id_pos_order].items.push({
                         name: row.item_name,
-                        parent: row.id_pos_order_line_parent, /* null = glowne danie, liczba = modyfikator zestawu */
+                        parent: row.id_pos_order_line_parent, 
                         id: row.id_pos_order_line
                     });
                 } 
@@ -209,8 +209,7 @@
                 const orderId = Number(id);
 
                 /* aktualizuj zawartosc karty przy kazdym odswiezeniu
-                 * pozycje moga znikac gdy kucharz je oznacza
-                 */
+                 , pozycje moga znikac gdy kucharz je oznacza */
                 div.innerHTML = `
                     <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                         <h2>Zamówienie #${id}</h2>
@@ -225,10 +224,7 @@
             });
         }
 
-        /*
-         * oznacza cale zamowienie jako gotowe
-         * najpierw odpala animacje znikania potem wysyla request do serwera
-         */
+        /* oznacza cale zamowienie jako gotowe ,najpierw odpala animacje znikania potem wysyla request do serwera  */
         async function gotowe(id) 
         {
             const karta = document.querySelector(`[data-id="${id}"]`);
@@ -239,24 +235,24 @@
                 setTimeout(async() => {
                     await fetch(`/api/done/${id}`, { method: 'POST' });  
                     loadOrders();   
-                }, 600); /* czeka az animacja sie skonczy (0.6s) */
+                }, 200);
             }
         }
 
         /*
-         * oznacza pojedyncza pozycje jako gotowa
-         * jesli to byla ostatnia pozycja - animuje znikniecie calej karty
+           1. oznacza pojedyncza pozycje jako gotowa
+         2. jesli to byla ostatnia pozycja - animuje znikniecie calej karty
          */
         async function gotoweLinia(id, orderId) 
         {
             await fetch(`/api/done/line/${id}`, { method: 'POST' }); 
 
-            /* sprawdz ile pozycji zostalo w zamowieniu (pomijamy wiersz stol) */
+            /*ile pozycji zostalo w zamowieniu */
             const remaining = document.querySelectorAll(`[data-id="${orderId}"] .tresc p:not(.stol)`);
 
             if (remaining.length <= 1)
             {
-                /* ostatnia pozycja - animuj znikniecie calej karty */
+                /* ostatnia pozycja-animacja karty */
                 const karta = document.querySelector(`[data-id="${orderId}"]`);
                 
                 if (karta) 
@@ -273,16 +269,16 @@
         /* aktualizuje timery na wszystkich kartach co sekunde */
         setInterval(() => {
             document.querySelectorAll('.timer').forEach(timer => {
-                const start = Number(timer.dataset.start); /* czas zlozenia zamowienia w ms */
+                const start = Number(timer.dataset.start); /* czas zlozenia zamowienia w milisek */
                 const diff = Math.floor((Date.now() - start) / 1000); /* ile sekund minelo */
                 const min = String(Math.floor(diff / 60)).padStart(2, '0'); /* minuty z wiodacym zerem */
                 const sec = String(diff % 60).padStart(2, '0'); /* sekundy z wiodacym zerem */
                 timer.textContent = `${min}:${sec}`;
             });
-        }); /* 1000ms = 1 sekunda */
+        }); 
 
-        setInterval(loadOrders, 5000); /* odswiezaj zamowienia co 5 sekund */
-        loadOrders(); /* zaladuj od razu przy starcie strony */
+        setInterval(loadOrders, 5000); /* odswieza zamowienia co 5 sekund */
+        loadOrders(); 
     </script>
 
 </body>
