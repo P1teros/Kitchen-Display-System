@@ -90,7 +90,7 @@ app.post('/api/done/empty/:id', async (req, res) => {
     try {
         conn = await pool.getConnection();
         await conn.query(
-            `UPDATE pos_order_line SET status = 'cancelled' WHERE id_pos_order_line = ?`,
+            `UPDATE pos_order SET status = 'cancelled' WHERE id_pos_order = ?`,
             [req.params.id]
         );
         res.json({ ok: true });
