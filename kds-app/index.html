@@ -100,7 +100,7 @@
         /* klasa dodawana gdy zamowienie ma zniknac - odpala animacje */
         .znika
         {
-            animation: fade-out 0.6s ease forwards; /* forwards = zostan w stanie koncowym po animacji */
+            animation: fade-out 0.6s ease forwards; /*forwards = zostan w stanie koncowym po animacji */
         }
 
         .naglowek 
@@ -153,8 +153,8 @@
     <script>
 
         /* 
-         * pobiera zamowienia z serwera i aktualizuje karty na ekranie
-         * nowe karty sa dodawane a stare usuwane bez migania calej strony
+         - pobiera zamowienia z serwera i aktualizuje karty na ekranie
+         - nowe karty sa dodawane a stare usuwane bez "migania' calej strony
          */
         async function loadOrders() 
         {
@@ -166,9 +166,7 @@
             const response = await fetch('/api/orders');
             const data = await response.json();
 
-            /* grupowanie wierszy z bazy po id zamowienia
-             * jedno zamowienie = wiele wierszy (po jednym na kazda pozycje)
-             */
+            /* grupowanie wierszy z bazy po id zamowienia*/
             const grouped = {};
             data.forEach(row =>
             {   
@@ -281,7 +279,7 @@
                 const sec = String(diff % 60).padStart(2, '0'); /* sekundy z wiodacym zerem */
                 timer.textContent = `${min}:${sec}`;
             });
-        }, 1000); /* 1000ms = 1 sekunda */
+        }); /* 1000ms = 1 sekunda */
 
         setInterval(loadOrders, 5000); /* odswiezaj zamowienia co 5 sekund */
         loadOrders(); /* zaladuj od razu przy starcie strony */
