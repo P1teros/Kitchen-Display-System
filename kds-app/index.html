@@ -149,6 +149,15 @@
             text-align: center;
         }
 
+        .timer 
+        {
+            font-size: 1rem;
+            color: #fff;
+            background: #192028;
+            border-radius: 8px;
+            padding: 4px 8px;
+        }
+
 
     </style>
 </head>
@@ -217,8 +226,9 @@
                 // zawsze aktualizuj zawartosc
                 const orderId = Number(id);
                 div.innerHTML = `
-                    <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer;">
+                    <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                         <h2>Zamówienie #${id}</h2>
+                        <span class="timer" data-start="${new Date(order.created_at).getTime()}">00:00</span>
                     </div>
                     <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
                     <div class="tresc">
@@ -266,6 +276,17 @@
             loadOrders();
         }
 
+        setInterval(() => {
+            document.querySelectorAll('.timer').forEach(timer => {
+                const start = Number(timer.dataset.start);
+                const diff = Math.floor((Date.now() - start) / 1000); // liczba sekund ktora minela od zlozenia zamowienia
+                const min = String(Math.floor(diff / 60)).padStart(2, '0') // przelicznik na minuty
+                const sec = String(diff % 60).padStart(2,'0') // przelicznik na sekundy
+
+                timer.textContent = `${min}:${sec}`;
+
+            });
+        });
         setInterval(loadOrders, 5000);
         loadOrders();
     </script>
