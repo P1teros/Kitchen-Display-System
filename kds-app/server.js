@@ -32,7 +32,11 @@ app.get('/api/orders', async (req, res) => {
     LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
         AND l.kds_served IS NULL
     WHERE o.status NOT IN ('closed', 'cancelled')
-    ORDER BY o.created_at DESC
+    AND EXISTS (
+        SELECT 1 FROM pos_order_line 
+        WHERE id_pos_order = o.id_pos_order
+    )
+    ORDER BY o.created_at DESC, l.id_pos_order_line ASC
     LIMIT 50
     `);
     res.json(rows);
