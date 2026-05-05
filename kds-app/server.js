@@ -68,9 +68,12 @@ app.post('/api/done/:id', async (req, res) => {
     try {
         conn = await pool.getConnection();
     await conn.query(
-        `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order = ?; 
-        UPDATE pos_order SET status = 'closed' WHERE id_pos_order = ?`,
-        [req.params.id, req.params.id]
+        `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order = ?`,
+        [req.params.id]
+    );
+    await conn.query(
+        `UPDATE pos_order SET status = 'closed' WHERE id_pos_order = ?`,
+        [req.params.id]
     );
         res.json({ ok: true });
     } catch (err) {
