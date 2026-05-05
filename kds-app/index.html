@@ -119,7 +119,7 @@
 
         .znika
         {
-            animation: fade-out 0.4s ease;
+            animation: fade-out 0.4s ease forwards;
         }
 
         .naglowek 
@@ -231,9 +231,18 @@
 
         async function gotowe(id) 
         {
-            await fetch(`/api/done/${id}`, { method: 'POST' });  
-            
-            loadOrders();
+            const karta = document.querySelector(`[data-id="${id}"]`);
+
+            if(karta)
+            {
+                karta.classList.add('znika');
+                setTimeout(async() => {
+                    await fetch(`/api/done/${id}`, { method: 'POST' });  
+                
+                    loadOrders();   
+                },400)
+            }
+
         }
 
         async function gotoweLinia(id) 
