@@ -149,13 +149,13 @@
 <body>
 
     <div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#222; border:2px solid #007afc; border-radius:16px; padding:30px; min-width:300px; max-width:500px;">
-        <h2 style="margin:0 0 20px;">Podsumowanie</h2>
-        <div id="modal-tresc"></div>
-        <button onclick="document.getElementById('modal').style.display='none'" style="margin-top:20px; padding:10px 30px; background:#007afc; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:1rem;">
-            Zamknij
-        </button>
-    </div>
+        <div style="background:#222; border:2px solid #007afc; border-radius:16px; padding:30px; width:95vw; max-height:85vh; overflow-y:auto;">
+            <h2 style="margin:0 0 20px;">DO ZROBIENIA</h2>
+            <div id="modal-tresc" style="display:grid; grid-template-columns: repeat(6, 1fr); gap:5px; max-height:70vh; overflow-y:auto;"></div>
+            <button onclick="document.getElementById('modal').style.display='none'" style="margin-top:20px; padding:10px 30px; background:#e54343; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:1rem; font-family:'Kanit', sans-serif;">
+                ZAMKNIJ
+            </button>
+        </div>
     </div>
 
     <div style="display:flex; align-items:center; margin-bottom:20px;">
@@ -290,16 +290,16 @@
 
         // przechodzenie przez grouped i zsumowanie ilosci
             Object.entries(grouped).forEach(([id, order]) => {
-                    order.items.forEach(item => {
-                        if (summed[item.name]) 
-                        {
-                            summed[item.name]++; 
-                        }
-                        else
-                        {
-                            summed[item.name] = 1;
-                        }
-                    });
+                order.items.forEach(item => {
+                    if (summed[item.name]) 
+                    {
+                        summed[item.name]++; 
+                    }
+                    else
+                    {
+                        summed[item.name] = 1;
+                    }
+                });
             });
             // pokazanie wyniku w okienku alert()
             let tekst = '';
@@ -311,7 +311,7 @@
             const tresc = document.getElementById('modal-tresc');
             
             tresc.innerHTML = Object.entries(summed)
-                .map(([nazwa, ilosc]) => `<p>${nazwa}: ${ilosc}</p>`)
+                .map(([nazwa, ilosc]) => `<p style="font-size:0.9rem; padding:10px 10px; margin:2px 0;">${nazwa}: ${ilosc}</p>`)
                 .join('');
             modal.style.display = 'flex';
         }
