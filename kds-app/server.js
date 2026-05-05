@@ -42,7 +42,7 @@ app.get('/api/orders', async (req, res) => {
         SELECT 1 FROM pos_order_line  /* pokaz tylko zamowienia ktore maja jakies pozycje */
         WHERE id_pos_order = o.id_pos_order
     )
-    ORDER BY o.created_at DESC, l.id_pos_order_line ASC  /* sortuj od najnowszych, pozycje w stalej kolejnosci */
+    ORDER BY o.created_at DESC, l.id_pos_order_line ASC  /* sortuj od najnowszych*/
     LIMIT 50
     `);
     res.json(rows);
