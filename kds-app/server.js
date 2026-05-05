@@ -12,7 +12,7 @@ const pool = createPool({
   password: '***REMOVED***'
 });
 
-// test polaczenia
+// pobieranie zamowienia
 app.get('/api/orders', async (req, res) => {
   let conn;
   try {
@@ -41,6 +41,8 @@ ORDER BY o.created_at DESC
   }
 });
 
+//oznacz pozycje XYZ jako gotową
+
 app.post('/api/done/line/:id', async (req, res) => {
     let conn;
     try {
@@ -56,6 +58,8 @@ app.post('/api/done/line/:id', async (req, res) => {
         if (conn) conn.release();
     }
 });
+
+//oznacz zamówienie XYZ jako gotowe
 
 app.post('/api/done/:id', async (req, res) => {
     let conn;
@@ -73,6 +77,21 @@ app.post('/api/done/:id', async (req, res) => {
     }
 });
 
+app.post('/api/done/line/:id', async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        await conn.query(
+            `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order_line = ?`,
+            [req.params.id]
+        );
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (conn) conn.release();
+    }
+});
 
 app.listen(3000, () => {
   console.log('serwer dzialaa na http://localhost:3000');
