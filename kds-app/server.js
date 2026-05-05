@@ -49,10 +49,29 @@ app.post('/api/done/line/:id', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
+
+        // oznacz pozycje jako gotowa
         await conn.query(
             `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order_line = ?`,
             [req.params.id]
         );
+
+          // sprawdz czy zamowienie ma jeszcze nieobsluzone pozycje
+        const remaining = await conn.query(
+            `SELECT COUNT(*) as ile FROM pos_order_line 
+             WHERE id_pos_order = (SELECT id_pos_order FROM pos_order_line WHERE id_pos_order_line = ?)
+             AND kds_served IS NULL`,
+            [req.params.id]
+        );
+
+        // jesli nie ma - zamknij zamowienie
+        if (Number(remaining[0].ile) === 0) {
+            await conn.query(
+                `UPDATE pos_order SET status = 'closed' 
+                 WHERE id_pos_order = (SELECT id_pos_order FROM pos_order_line WHERE id_pos_order_line = ?)`,
+                [req.params.id]
+            );
+        }
         res.json({ ok: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
