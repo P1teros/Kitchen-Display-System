@@ -32,9 +32,9 @@ app.get('/api/orders', async (req, res) => {
         l.name AS item_name,
         l.qty,
         l.id_pos_order_line_parent,
-        l.id_pos_order_line
+        l.id_pos_order_line,
         l.kds_served
-        
+
     FROM pos_order o
     LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
     WHERE o.status NOT IN ('closed', 'cancelled')
