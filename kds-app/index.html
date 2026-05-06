@@ -333,6 +333,25 @@
             modal.style.display = 'flex';
         }
 
+        function pokazMenu(orderId, btn) 
+        {
+            // usun stare menu jesli istnieje
+            const stare = document.getElementById('menu-popup');
+            if (stare) stare.remove();
+
+            const menu = document.createElement('div');
+            menu.id = 'menu-popup';
+            menu.style = 'position:absolute; background:#333; border:1px solid #555; border-radius:8px; padding:8px; z-index:999;';
+            
+            menu.innerHTML = `
+                <p onclick="zmienStatus(${orderId}, 0)" style="cursor:pointer; background:#c0392b; margin:4px 0;">Nowe</p>
+                <p onclick="zmienStatus(${orderId}, 1)" style="cursor:pointer; background:#ff8c00; margin:4px 0;">W przygotowaniu</p>
+                <p onclick="zmienStatus(${orderId}, 2)" style="cursor:pointer; background:#2d8a4e; margin:4px 0;">Gotowe do wydania</p>
+            `;
+
+            btn.parentElement.appendChild(menu);
+        }
+
         /* aktualizuje timery na wszystkich kartach co sekunde */
         setInterval(() => {
             document.querySelectorAll('.timer').forEach(timer => {
