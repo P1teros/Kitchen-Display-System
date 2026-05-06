@@ -33,7 +33,8 @@ app.get('/api/orders', async (req, res) => {
         l.qty,
         l.id_pos_order_line_parent,
         l.id_pos_order_line,
-        l.kds_served
+        l.kds_served,
+        l.kds_status
 
     FROM pos_order o
     LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
@@ -126,6 +127,23 @@ app.post('/api/done/empty/:id', async (req, res) => {
         await conn.query(
             `UPDATE pos_order SET status = 'cancelled' WHERE id_pos_order = ?`,
             [req.params.id]
+        );
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+/* zmiana statusu pojedynczej pozycji */
+app.post('/api/status/line/:id/:status', async (req, res) => {
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        await conn.query(
+            `UPDATE pos_order_line SET kds_status = ? WHERE id_pos_order_line = ?`,
+            [req.params.status, req.params.id]
         );
         res.json({ ok: true });
     } catch (err) {
