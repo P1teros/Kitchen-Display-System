@@ -247,7 +247,7 @@
                         <p class="stol">Stół: ${order.name}</p>
                         ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => `
                             <p onclick="gotoweLinia(${item.id}, ${orderId})" 
-                            style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : item.status == 1 ? 'background:#ff8c00;' : item.status == 2 ? 'background:#2d8a4e;' : 'background:#c0392b;'}">
+                            style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">
                                 ${item.name}
                             </p>`).join('')}
                     </div>
@@ -339,7 +339,11 @@
         {
             // usun stare menu jesli istnieje
             const stare = document.getElementById('menu-popup');
-            if (stare) stare.remove();
+            if (stare)
+            {
+                stare.remove();
+                return;
+            } 
 
             const menu = document.createElement('div');
             menu.id = 'menu-popup'; 
