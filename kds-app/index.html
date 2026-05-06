@@ -59,7 +59,7 @@
         {
             min-width: 200px;
             max-width: 300px;
-            flex: 1; /* karty wypelniaja rowno dostepne miejsce */
+            flex: 0 0 1; /* karty wypelniaja rowno dostepne miejsce */
         }
 
         h2 
@@ -342,7 +342,6 @@
             if (stare)
             {
                 stare.remove();
-                return;
             } 
 
             const menu = document.createElement('div');
