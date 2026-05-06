@@ -206,7 +206,8 @@
                         name: row.item_name,
                         parent: row.id_pos_order_line_parent, 
                         id: row.id_pos_order_line,
-                        done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00'
+                        done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
+                        status: row.kds_status
                     });
                 } 
             });
@@ -235,13 +236,14 @@
                     <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
                         <h2>Zamówienie #${id}</h2>
                         <span class="timer" data-start="${new Date(order.created_at).getTime()}">00:00</span>
+                        <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#444; color:#fff; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
                     </div>
                     <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
                     <div class="tresc">
                         <p class="stol">Stół: ${order.name}</p>
                         ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => `
                             <p onclick="gotoweLinia(${item.id}, ${orderId})" 
-                            style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">
+                            style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : item.status == 1 ? 'background:#ff8c00;' : item.status == 2 ? 'background:#2d8a4e;' : 'background:#c0392b;'}">
                                 ${item.name}
                             </p>`).join('')}
                     </div>
