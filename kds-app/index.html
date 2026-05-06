@@ -230,10 +230,13 @@
 
                 const orderId = Number(id);
 
+                const statusZamowienia = order.items.every(i => i.status == 2) ? 2 : order.items.some(i => i.status == 1) ? 1 : 0;
+                const kolorNaglowka = statusZamowienia == 2 ? '#2d8a4e' : statusZamowienia == 1 ? '#ff8c00' : '#c0392b';
+
                 /* aktualizuj zawartosc karty przy kazdym odswiezeniu
                  , pozycje moga znikac gdy kucharz je oznacza */
                 div.innerHTML = `
-                        <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative;">                        <div>
+                        <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative; background:${kolorNaglowka};"> <div>
                             <h2 style="margin:0;">Zamówienie #${id}</h2>
                             <span class="timer" data-start="${new Date(order.created_at).getTime()}" style="margin-left:8px;">00:00</span>
                         </div>
