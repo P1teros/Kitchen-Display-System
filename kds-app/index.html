@@ -202,13 +202,17 @@
 
                 if (row.item_name) /*sprawdzanie czy wiersz ma nazwe pozycji (moze byc null jesli zamwienie jest puste)*/
                 {
-                    grouped[row.id_pos_order].items.push({
-                        name: row.item_name,
-                        parent: row.id_pos_order_line_parent, 
-                        id: row.id_pos_order_line,
-                        done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
-                        status: row.kds_status
-                    });
+                    for(let i = 0; i < row.qty; i++)
+                    {
+                        grouped[row.id_pos_order].items.push({
+                            name: row.item_name,
+                            parent: row.id_pos_order_line_parent, 
+                            id: row.id_pos_order_line,
+                            done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
+                            status: row.kds_status,
+                            qty: row.qty
+                        });
+                    }
                 } 
             });
 
@@ -246,10 +250,7 @@
                     <div class="tresc">
                         <p class="stol">Stół: ${order.name}</p>
                         ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => `
-                            <p onclick="gotoweLinia(${item.id}, ${orderId})" 
-                            style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">
-                                ${item.name}
-                            </p>`).join('')}
+                            <p onclick="gotoweLinia(${item.id}, ${orderId})" style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">${item.name}</p>`).join('')}
                     </div>
                 `;
             });
@@ -312,7 +313,7 @@
                     
                     if (summed[item.name]) 
                     {
-                        summed[item.name]++; 
+                        summed[item.name]++;
                     }
                     else
                     {
@@ -342,6 +343,7 @@
             if (stare)
             {
                 stare.remove();
+                return;
             } 
 
             const menu = document.createElement('div');
