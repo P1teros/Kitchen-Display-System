@@ -298,6 +298,12 @@
         // przechodzenie przez grouped i zsumowanie ilosci
             Object.entries(grouped).forEach(([id, order]) => {
                 order.items.forEach(item => {
+
+                    if (item.done)
+                    {
+                        return;    
+                    }
+                    
                     if (summed[item.name]) 
                     {
                         summed[item.name]++; 
