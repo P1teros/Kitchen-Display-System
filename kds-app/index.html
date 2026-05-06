@@ -340,16 +340,33 @@
             if (stare) stare.remove();
 
             const menu = document.createElement('div');
-            menu.id = 'menu-popup';
-            menu.style = 'position:absolute; background:#333; border:1px solid #555; border-radius:8px; padding:8px; z-index:999;';
-            
+            menu.id = 'menu-popup'; 
+            menu.style = 'position:absolute; background:#333; border:1px solid #555; border-radius:8px; padding:8px; z-index:999;'; // pojawienie sie w miejscu przycisku 
+
             menu.innerHTML = `
                 <p onclick="zmienStatus(${orderId}, 0)" style="cursor:pointer; background:#c0392b; margin:4px 0;">Nowe</p>
                 <p onclick="zmienStatus(${orderId}, 1)" style="cursor:pointer; background:#ff8c00; margin:4px 0;">W przygotowaniu</p>
                 <p onclick="zmienStatus(${orderId}, 2)" style="cursor:pointer; background:#2d8a4e; margin:4px 0;">Gotowe do wydania</p>
             `;
 
-            btn.parentElement.appendChild(menu);
+            btn.parentElement.appendChild(menu); 
+        }
+
+        async function zmienStatus(orderId, status) 
+        {
+            // zmien status wszystkich pozycji zamowienia 
+            const karta = document.querySelector(`[data-id="${orderId}"]`);
+            const pozycje = karta.querySelectorAll('.tresc p:not(.stol)');
+            
+            // wyslij request dla kazdej pozycji
+            const items = grouped[orderId].items;
+            for (const item of items) 
+            {
+                await fetch(`/api/status/line/${item.id}/${status}`, { method: 'POST' });
+            }
+            
+            document.getElementById('menu-popup').remove();
+            loadOrders();
         }
 
         /* aktualizuje timery na wszystkich kartach co sekunde */
