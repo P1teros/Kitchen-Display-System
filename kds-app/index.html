@@ -233,8 +233,7 @@
                 /* aktualizuj zawartosc karty przy kazdym odswiezeniu
                  , pozycje moga znikac gdy kucharz je oznacza */
                 div.innerHTML = `
-                    <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
-                        <div>
+                        <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative;">                        <div>
                             <h2 style="margin:0;">Zamówienie #${id}</h2>
                             <span class="timer" data-start="${new Date(order.created_at).getTime()}" style="margin-left:8px;">00:00</span>
                         </div>
@@ -341,17 +340,17 @@
 
             const menu = document.createElement('div');
             menu.id = 'menu-popup'; 
-            menu.style = 'position:absolute; background:#333; border:1px solid #555; border-radius:8px; padding:8px; z-index:999;'; // pojawienie sie w miejscu przycisku 
+            menu.style = 'position:absolute; top:100%; right:0; background:#333; border:1px solid #555; border-radius:8px; padding:8px; z-index:999;'; // pojawienie sie w miejscu przycisku 
 
             menu.innerHTML = `
-                <p onclick="zmienStatus(${orderId}, 0)" style="cursor:pointer; background:#c0392b; margin:4px 0;">Nowe</p>
-                <p onclick="zmienStatus(${orderId}, 1)" style="cursor:pointer; background:#ff8c00; margin:4px 0;">W przygotowaniu</p>
-                <p onclick="zmienStatus(${orderId}, 2)" style="cursor:pointer; background:#2d8a4e; margin:4px 0;">Gotowe do wydania</p>
+           
+                <p onclick="event.stopPropagation(); zmienStatus(${orderId}, 1)" style="cursor:pointer; background:#ff8c00; margin:4px 0;">W przygotowaniu</p>
+                <p onclick="event.stopPropagation(); zmienStatus(${orderId}, 2)" style="cursor:pointer; background:#2d8a4e; margin:4px 0;">Gotowe do wydania</p>
             `;
-
-            btn.parentElement.appendChild(menu); 
+            
+            btn.parentElement.appendChild(menu);  // dodaje menu obok przycisku ktory kliknalem 
         }
-
+        
         async function zmienStatus(orderId, status) 
         {
             // zmien status wszystkich pozycji zamowienia 
@@ -365,7 +364,7 @@
                 await fetch(`/api/status/line/${item.id}/${status}`, { method: 'POST' });
             }
             
-            document.getElementById('menu-popup').remove();
+            document.getElementById('menu-popup').remove(); //zamyka menu
             loadOrders();
         }
 
