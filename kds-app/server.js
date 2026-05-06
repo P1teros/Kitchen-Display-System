@@ -33,17 +33,17 @@ app.get('/api/orders', async (req, res) => {
         l.qty,
         l.id_pos_order_line_parent,
         l.id_pos_order_line
-
+        l.kds_served
+        
     FROM pos_order o
     LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
-        AND l.kds_served IS NULL  /* dolacz tylko nieobsluzone pozycje */
     WHERE o.status NOT IN ('closed', 'cancelled')
     AND EXISTS (
         SELECT 1 FROM pos_order_line  /* pokaz tylko zamowienia ktore maja jakies pozycje */
         WHERE id_pos_order = o.id_pos_order
     )
     ORDER BY o.created_at DESC, l.id_pos_order_line ASC  /* sortuj od najnowszych*/
-    LIMIT 50
+    LIMIT 200
     `);
     res.json(rows);
   } catch (err) {
