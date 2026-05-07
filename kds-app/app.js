@@ -1,6 +1,8 @@
 let grouped = {};
 const closeTimers = {}; // orderId -> timeoutId
 
+let workMode = false;
+
 /* 
  - pobiera zamowienia z serwera i aktualizuje karty na ekranie
  - nowe karty sa dodawane a stare usuwane bez "migania' calej strony
