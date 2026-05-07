@@ -202,17 +202,14 @@
 
                 if (row.item_name) /*sprawdzanie czy wiersz ma nazwe pozycji (moze byc null jesli zamwienie jest puste)*/
                 {
-                    for(let i = 0; i < row.qty; i++)
-                    {
-                        grouped[row.id_pos_order].items.push({
-                            name: row.item_name,
-                            parent: row.id_pos_order_line_parent, 
-                            id: row.id_pos_order_line,
-                            done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
-                            status: row.kds_status,
-                            qty: row.qty
-                        });
-                    }
+                    grouped[row.id_pos_order].items.push({
+                        name: row.item_name,
+                        parent: row.id_pos_order_line_parent, 
+                        id: row.id_pos_order_line,
+                        done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
+                        status: row.kds_status,
+                        qty: row.qty
+                    });
                 } 
             });
 
@@ -371,7 +368,25 @@
             {
                 await fetch(`/api/status/line/${item.id}/${status}`, { method: 'POST' });
             }
+
+            if (status === 2) 
+            {
+                const naglowek = karta.querySelector('.naglowek');
+                naglowek.style.background = '#2d8a4e';
+                
+                setTimeout(async() => {
+                    karta.classList.add('znika');
+                    setTimeout(async() => {
+                        await fetch(`/api/done/${orderId}`, { method: 'POST' });  
+                        loadOrders();   
+                    }, 600);
+                }, 30000);
+            }
             
+            else
+            {
+                loadOrders();
+            }
             document.getElementById('menu-popup').remove(); //zamyka menu
             loadOrders();
         }
