@@ -61,35 +61,46 @@ app.get('/api/orders', async (req, res) => {
 app.post('/api/done/line/:id', async (req, res) => {
     let conn;
     try {
-        conn = await pool.getConnection();
+    conn = await pool.getConnection();
 
-        /* oznacz pozycje jako wydana */
+    // 1) oznacz pozycję jako wydaną
+    await conn.query(
+        `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order_line = ?`,
+        [req.params.id]
+    );
+
+    // 2) pobierz orderId
+    const orderRow = await conn.query(
+        `SELECT id_pos_order FROM pos_order_line WHERE id_pos_order_line = ?`,
+        [req.params.id]
+    );
+    const orderId = Number(orderRow?.[0]?.id_pos_order);
+
+    // 3) sprawdź czy zostały niewydane pozycje
+    const remainingRow = await conn.query(
+        `SELECT COUNT(*) as ile
+        FROM pos_order_line
+        WHERE id_pos_order = ?
+            AND kds_served IS NULL`,
+        [orderId]
+    );
+
+    const remaining = Number(remainingRow?.[0]?.ile ?? 0);
+    const allServed = remaining === 0;
+
+    // 4) jeśli wszystko wydane, ustaw status KDS=2 (gotowe do wydania) dla pozycji
+    if (allServed) {
         await conn.query(
-            `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order_line = ?`,
-            [req.params.id]
+        `UPDATE pos_order_line SET kds_status = 2 WHERE id_pos_order = ?`,
+        [orderId]
         );
+    }
 
-        /* czy zamowienie ma jeszcze nieobsluzone pozycje? */
-        const remaining = await conn.query(
-            `SELECT COUNT(*) as ile FROM pos_order_line 
-             WHERE id_pos_order = (SELECT id_pos_order FROM pos_order_line WHERE id_pos_order_line = ?)
-             AND kds_served IS NULL`,
-            [req.params.id]
-        );
-
-        /* jesli nie ma juz zadnych pozycji do wydania - zamknij zamowienie */
-        if (Number(remaining[0].ile) === 0) {
-            await conn.query(
-                `UPDATE pos_order SET status = 'closed' 
-                 WHERE id_pos_order = (SELECT id_pos_order FROM pos_order_line WHERE id_pos_order_line = ?)`,
-                [req.params.id]
-            );
-        }
-        res.json({ ok: true });
+    res.json({ ok: true, orderId, allServed });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message });
     } finally {
-        if (conn) conn.release();
+    if (conn) conn.release();
     }
 });
 
