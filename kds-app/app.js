@@ -68,11 +68,11 @@ async function loadOrders()
         /* aktualizuj zawartosc karty przy kazdym odswiezeniu
          , pozycje moga znikac gdy kucharz je oznacza */
         div.innerHTML = `
-                <div class="naglowek" onclick="gotowe(${orderId})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative; background:${kolorNaglowka};"> <div>
+                <div class="naglowek" onclick="gotowe(${orderId},${statusZamowienia} )" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative; background:${kolorNaglowka};"> <div>
                     <h2 style="margin:0;">Zamówienie #${id}</h2>
                     <span class="timer" data-start="${new Date(order.created_at).getTime()}" style="margin-left:8px;">00:00</span>
                 </div>
-                <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#666; color:#fff; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
+                <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#C0C0C0; color:#zzz; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
             </div>
             <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
             <div class="tresc">
@@ -88,17 +88,20 @@ async function loadOrders()
 }
 
 /* oznacza cale zamowienie jako gotowe ,najpierw odpala animacje znikania potem wysyla request do serwera  */
-async function gotowe(id) 
+async function gotowe(id,statusZamowienia) 
 {
+    console.log('gotowe klik', id, statusZamowienia, typeof statusZamowienia)
     const karta = document.querySelector(`[data-id="${id}"]`);
 
     if (karta)
     {
-        karta.classList.add('znika'); /* odpala animacje fade-out */
-        setTimeout(async() => {
-            await fetch(`/api/done/${id}`, { method: 'POST' });  
-            loadOrders();   
-        }, 200);
+        if (status != 2) 
+        {
+            const naglowek = karta.querySelector('.naglowek');
+            naglowek.style.background = '#2d8a4e';
+            
+            await zmienStatus(id,2);
+        }
     }
 }
 
