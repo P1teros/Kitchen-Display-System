@@ -33,7 +33,6 @@ body
     padding: 20px;
     overflow: hidden; /* blokuje przewijanie strony */
 }
-
 /* kontener na karty - uklada je w rzedzie */
 #orders 
 {
@@ -132,4 +131,45 @@ p
     background: #192028;
     border-radius: 6px;
     padding: 4px 8px;
+}
+
+/* domyślnie panel trybu pracy ukryty */
+#summary-panel 
+{
+    display: none;
+    width: 320px;
+    min-width: 320px;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    background: #1a1a1a;
+    border: 2px solid #007afc;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+/* kontener dla panelu + zamówień */
+#layout 
+{
+    display: block;
+}
+
+/* tryb pracy: układ lewy/prawy */
+.work-mode #layout 
+{
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* tryb pracy: pokaż lewy panel */
+.work-mode #summary-panel 
+{
+    display: block;
+}
+
+/* tryb pracy: prawa strona zajmuje resztę */
+.work-mode #orders 
+{
+    flex: 1;
+    min-width: 0;
 }
