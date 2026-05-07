@@ -277,29 +277,33 @@
             const r = await fetch(`/api/done/line/${lineId}`, { method: 'POST' });
             const result = await r.json(); // { ok, orderId, allServed }
 
-            // Jeśli to było ostatnie kliknięcie w tym zamówieniu:
             if (result.allServed) 
             {
                 const karta = document.querySelector(`[data-id="${result.orderId}"]`);
-                if (karta) 
+                
+                if (!karta) 
                 {
-                    const naglowek = karta.querySelector('.naglowek');
-                    if (naglowek) naglowek.style.background = '#2d8a4e';
+                    loadOrders();
+                    return;
                 }
 
-                // po 30 sekundach dopiero zamknij zamówienie (i usuń kartę)
-                setTimeout(async () => {
-                await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
-                loadOrders();
+                const naglowek = karta.querySelector('.naglowek');
+                if (naglowek) naglowek.style.background = '#2d8a4e';
+
+                setTimeout(() => {
+                    karta.classList.add('znika'); // animacja 0.6s
+
+                    setTimeout(async () => {
+                        await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
+                        loadOrders();
+                    }, 600);
                 }, 30000);
 
-                // odśwież widok, ale karta ma zostać (już zielona)
                 loadOrders();
                 return;
-        }
+            }
 
-        // normalnie: tylko odśwież
-        loadOrders();
+            loadOrders();
         }
 
         function pokazPodsumowanie() 
