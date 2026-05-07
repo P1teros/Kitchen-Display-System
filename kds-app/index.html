@@ -247,7 +247,7 @@
                     <div class="tresc">
                         <p class="stol">Stół: ${order.name}</p>
                         ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => `
-                            <p onclick="gotoweLinia(${item.id}, ${orderId})" style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">${item.name}</p>`).join('')}
+                            <p onclick="gotoweLinia(${item.id}, ${orderId}, ${item.status})" style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">${item.name}</p>`).join('')}
                     </div>
                 `;
             });
@@ -272,27 +272,34 @@
            1. oznacza pojedyncza pozycje jako gotowa
          2. jesli to byla ostatnia pozycja - animuje znikniecie calej karty
          */
-        async function gotoweLinia(id, orderId) 
+        async function gotoweLinia(lineId, orderId) 
         {
-            await fetch(`/api/done/line/${id}`, { method: 'POST' }); 
+            const r = await fetch(`/api/done/line/${lineId}`, { method: 'POST' });
+            const result = await r.json(); // { ok, orderId, allServed }
 
-            /*ile pozycji zostalo w zamowieniu */
-            const remaining = document.querySelectorAll(`[data-id="${orderId}"] .tresc p:not(.stol)`);
-
-            if (remaining.length <= 1)
+            // Jeśli to było ostatnie kliknięcie w tym zamówieniu:
+            if (result.allServed) 
             {
-                /* ostatnia pozycja-animacja karty */
-                const karta = document.querySelector(`[data-id="${orderId}"]`);
-                
+                const karta = document.querySelector(`[data-id="${result.orderId}"]`);
                 if (karta) 
                 {
-                    karta.classList.add('znika');
-                    setTimeout(() => loadOrders(), 600);
-                    return;
+                    const naglowek = karta.querySelector('.naglowek');
+                    if (naglowek) naglowek.style.background = '#2d8a4e';
                 }
-            }
-                
-            loadOrders();
+
+                // po 30 sekundach dopiero zamknij zamówienie (i usuń kartę)
+                setTimeout(async () => {
+                await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
+                loadOrders();
+                }, 30000);
+
+                // odśwież widok, ale karta ma zostać (już zielona)
+                loadOrders();
+                return;
+        }
+
+        // normalnie: tylko odśwież
+        loadOrders();
         }
 
         function pokazPodsumowanie() 
@@ -388,6 +395,10 @@
                 loadOrders();
             }
             document.getElementById('menu-popup').remove(); //zamyka menu
+            grouped[orderId].items.forEach(item => {
+                item.status = status;
+            });
+
             loadOrders();
         }
 
