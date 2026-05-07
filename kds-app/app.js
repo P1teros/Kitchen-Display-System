@@ -208,7 +208,8 @@ function trybPracy()
     {
         btn.textContent = 'TRYB PRACY: WŁ.';
         document.body.classList.add('work-mode');
-            const summed = {}; 
+        
+        const summed = {}; 
 
         // przechodzenie przez grouped i zsumowanie ilosci
         Object.entries(grouped).forEach(([id, order]) => {
@@ -276,7 +277,27 @@ function sumTrybPraca()
     {
         html += '<div style="margin-bottom:16px;">';
         html += `<h3 style="margin:0 0 8px; color:#ffb347;">${category}</h3>`;
+
+        const products = summary[category];
+
+        for (const name in products) 
+        {
+            const qty = products[name];
+            html += `<p style="margin:4px 0;">${name}: ${qty}</p>`;
+        }
+
+        html += '</div>';
+
+        
+        if (html === '') 
+        {
+            html = '<p>Brak pozycji do przygotowania.</p>';
+        }
+        panel.innerHTML = html;
     }
+
+
+}
 
 function pokazMenu(orderId, btn) 
 {
