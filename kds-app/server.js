@@ -35,16 +35,20 @@ app.get('/api/orders', async (req, res) => {
         l.id_pos_order_line,
         l.kds_served,
         l.kds_status
-
-    FROM pos_order o
-    LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
-    WHERE o.status NOT IN ('closed', 'cancelled')
-    AND EXISTS (
-        SELECT 1 FROM pos_order_line  /* pokaz tylko zamowienia ktore maja jakies pozycje */
-        WHERE id_pos_order = o.id_pos_order
-    )
-    ORDER BY o.created_at DESC, l.id_pos_order_line ASC  /* sortuj od najnowszych*/
-    LIMIT 200
+        g.name AS item_category
+        
+        FROM pos_order o
+        LEFT JOIN pos_order_line l ON o.id_pos_order = l.id_pos_order
+        LEFT JOIN item i ON i.id_item = l.item_id
+        LEFT JOIN item_group g ON g.id_item_group = i.id_item_group
+        WHERE o.status NOT IN ('closed', 'cancelled')
+            AND EXISTS (
+            SELECT 1
+            FROM pos_order_line x
+            WHERE x.id_pos_order = o.id_pos_order
+            )
+        ORDER BY o.created_at DESC, l.id_pos_order_line ASC
+        LIMIT 200
     `);
     res.json(rows);
   } catch (err) {
