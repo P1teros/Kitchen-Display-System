@@ -89,7 +89,8 @@ app.post('/api/done/line/:id', async (req, res) => {
     const allServed = remaining === 0;
 
     // 4) jeśli wszystko wydane, ustaw status KDS=2 (gotowe do wydania) dla pozycji
-    if (allServed) {
+    if (allServed) 
+    {
         await conn.query(
         `UPDATE pos_order_line SET kds_status = 2 WHERE id_pos_order = ?`,
         [orderId]
@@ -102,6 +103,45 @@ app.post('/api/done/line/:id', async (req, res) => {
     } finally {
     if (conn) conn.release();
     }
+});
+
+app.post('/api/undo/line/:id', async (req, res) => {
+    let conn;
+    try {
+            conn = await pool.getConnection();
+
+            const row = await conn.query(
+                `SELECT id_pos_order
+                FROM pos_order_line
+                WHERE id_pos_order_line = ?`,
+                [req.params.id]
+            );
+
+            if (!row || !row[0]) 
+            {
+                return res.status(404).json({ error: 'Linia nie istnieje' });
+            }
+
+            const orderId = Number(row[0].id_pos_order);
+            await conn.query(
+                `UPDATE pos_order_line
+                SET kds_served = NULL,
+                    kds_status = 0
+                WHERE id_pos_order_line = ?`,
+                [req.params.id]
+            );
+
+            await conn.query(
+                `UPDATE pos_order SET status = 'open' WHERE id_pos_order = ?`,
+                [orderId]
+            );
+            res.json({ ok: true, orderId });
+            
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        } finally {
+            if (conn) conn.release();
+        }
 });
 
 /*
