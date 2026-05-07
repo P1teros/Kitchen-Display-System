@@ -195,6 +195,26 @@ function pokazPodsumowanie()
     modal.style.display = 'flex';
 }
 
+let workMode = false;
+
+function trybPracy() 
+{
+    workMode = !workMode;
+
+    const btn = document.getElementById('btn-tryb-pracy');
+
+    if (workMode) 
+    {
+        btn.textContent = 'TRYB PRACY: WŁ.';
+        document.body.classList.add('work-mode');
+    } 
+    else 
+    {
+        btn.textContent = 'TRYB PRACY: WYŁ.';
+        document.body.classList.remove('work-mode');
+    }
+}
+
 function pokazMenu(orderId, btn) 
 {
     // usun stare menu jesli istnieje
