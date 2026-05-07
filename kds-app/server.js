@@ -63,20 +63,20 @@ app.post('/api/done/line/:id', async (req, res) => {
     try {
     conn = await pool.getConnection();
 
-    // 1) oznacz pozycję jako wydaną
+    //  oznacz pozycje jako wydana
     await conn.query(
         `UPDATE pos_order_line SET kds_served = NOW() WHERE id_pos_order_line = ?`,
         [req.params.id]
     );
 
-    // 2) pobierz orderId
+    // pobierz orderId
     const orderRow = await conn.query(
         `SELECT id_pos_order FROM pos_order_line WHERE id_pos_order_line = ?`,
         [req.params.id]
     );
     const orderId = Number(orderRow?.[0]?.id_pos_order);
 
-    // 3) sprawdź czy zostały niewydane pozycje
+    // sprawdz czy zostaly niewydane pozycje
     const remainingRow = await conn.query(
         `SELECT COUNT(*) as ile
         FROM pos_order_line
@@ -88,7 +88,7 @@ app.post('/api/done/line/:id', async (req, res) => {
     const remaining = Number(remainingRow?.[0]?.ile ?? 0);
     const allServed = remaining === 0;
 
-    // 4) jeśli wszystko wydane, ustaw status KDS=2 (gotowe do wydania) dla pozycji
+    // jesli wszystko wydane- ustaw status KDS=2 (gotowe do wydania) dla pozycji
     if (allServed) 
     {
         await conn.query(
