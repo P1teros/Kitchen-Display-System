@@ -1,8 +1,6 @@
 let grouped = {};
 const closeTimers = {}; // orderId -> timeoutId
 
-let workMode = false;
-
 /* 
  - pobiera zamowienia z serwera i aktualizuje karty na ekranie
  - nowe karty sa dodawane a stare usuwane bez "migania' calej strony
@@ -41,7 +39,8 @@ async function loadOrders()
                 id: row.id_pos_order_line,
                 done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
                 status: row.kds_status,
-                qty: row.qty
+                qty: row.qty,
+                category: row.item_categ
             });
         } 
     });
@@ -182,7 +181,7 @@ function pokazPodsumowanie()
             }
         });
     });
-    // pokazanie wyniku w okienku alert()
+    // pokazanie wyniku w okienku
     let tekst = '';
     Object.entries(summed).forEach(([nazwa, ilosc]) => {
         tekst += nazwa + ': ' + ilosc + '\n'; 
@@ -209,13 +208,75 @@ function trybPracy()
     {
         btn.textContent = 'TRYB PRACY: WŁ.';
         document.body.classList.add('work-mode');
+            const summed = {}; 
+
+        // przechodzenie przez grouped i zsumowanie ilosci
+        Object.entries(grouped).forEach(([id, order]) => {
+            order.items.forEach(item => {
+
+                if (item.done)
+                {
+                    return;    
+                }
+                
+                if (summed[item.name]) 
+                {
+                    summed[item.name]++;
+                }
+                else
+                {
+                    summed[item.name] = 1;
+                }
+            });
+        });
+        // pokazanie wyniku w okienku
+        let tekst = '';
+        Object.entries(summed).forEach(([nazwa, ilosc]) => {
+            tekst += nazwa + ': ' + ilosc + '\n'; 
+        });
+
     } 
+
     else 
     {
         btn.textContent = 'TRYB PRACY: WYŁ.';
         document.body.classList.remove('work-mode');
     }
 }
+
+function sumTrybPraca()
+{
+    const panel = document.getElementById('summary-panel-content');
+    if (!panel) return;
+
+    const summary = {};
+
+    Object.entries(grouped).forEach(([orderId, order]) => {
+        order.items.forEach(item => {
+            if (item.done) return;
+            const category = item.category || 'INNE';
+            const itemName = item.name;
+            const qty = Number(item.qty) || 0;
+
+            if (!summary[category]) 
+            {
+                summary[category] = {};
+            }
+
+            if (!summary[category][itemName]) 
+            {
+                summary[category][itemName] = 0;
+            }
+            summary[category][itemName] += qty;
+        });
+    });
+
+    let html = '';
+    for (const category in summary) 
+    {
+        html += '<div style="margin-bottom:16px;">';
+        html += `<h3 style="margin:0 0 8px; color:#ffb347;">${category}</h3>`;
+    }
 
 function pokazMenu(orderId, btn) 
 {
