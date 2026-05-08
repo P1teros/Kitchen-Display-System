@@ -140,30 +140,28 @@ async function gotowe(id,statusZamowienia)
 async function gotoweLinia(lineId, orderId) 
 {
     const r = await fetch(`/api/done/line/${lineId}`, { method: 'POST' });
-    const result = await r.json(); // { ok, orderId, allServed }
+    const result = await r.json();
+
+    if (grouped[orderId]) 
+    {
+        const item = grouped[orderId].items.find(i => i.id == lineId);
+        if (item) 
+        {
+            item.done = true;
+            item.status = 2;
+        }
+    }
+
+    ustawKolorNaglowka(orderId);
 
     if (result.allServed) 
     {
-        const karta = document.querySelector(`[data-id="${result.orderId}"]`);
-
-        if (karta) 
-        {
-            const naglowek = karta.querySelector('.naglowek');
-
-            if (naglowek) naglowek.style.background = '#2d8a4e';
-        }
-
-        // anuluj ewentualnie stary timer (gdyby się dublował)
         if (closeTimers[result.orderId]) clearTimeout(closeTimers[result.orderId]);
-
         closeTimers[result.orderId] = setTimeout(async () => {
             await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
             delete closeTimers[result.orderId];
             loadOrders();
         }, 30000);
-
-        loadOrders();
-        return;
     }
 
     loadOrders();
@@ -173,15 +171,23 @@ async function undoLinia(lineId, orderId)
 {
     const r = await fetch(`/api/undo/line/${lineId}`, { method: 'POST' });
     const result = await r.json();
-
     const oid = result.orderId ?? orderId;
 
-    if (closeTimers[oid]) 
-    {
+    if (grouped[oid]) 
+        {
+        const item = grouped[oid].items.find(i => i.id == lineId);
+        if (item) {
+            item.done = false;
+            item.status = 0;
+        }
+    }
+
+    if (closeTimers[oid]) {
         clearTimeout(closeTimers[oid]);
         delete closeTimers[oid];
     }
 
+    ustawKolorNaglowka(oid);
     loadOrders();
 }
 
@@ -245,6 +251,7 @@ function trybPracy()
         btnPodsumowanie.style.visibility = 'visible';
     }
 }
+
 function sumTrybPraca()
 {
     const panel = document.getElementById('summary-panel-content');
@@ -254,7 +261,8 @@ function sumTrybPraca()
 
     Object.entries(grouped).forEach(([orderId, order]) => {
         order.items.forEach(item => {
-            if (item.done) return;
+            if (item.done || item.status == 2) return;
+
             const category = item.category || 'INNE';
             const itemName = item.name;
             const qty = Number(item.qty) || 0;
@@ -332,48 +340,58 @@ async function zmienStatus(orderId, status)
         await fetch(`/api/status/line/${item.id}/${status}`, { method: 'POST' });
     }
 
-    grouped[orderId].items = 2;
-    loadOrders();
+    grouped[orderId].items.forEach(item => {
+        item.status = status;
+
+        if (status !== 2) item.done = false;
+    });
+    
+    ustawKolorNaglowka(orderId);
+
 
     if (status === 2) 
     {
-        const naglowek = karta.querySelector('.naglowek');
-        naglowek.style.background = '#2d8a4e';
-
-        if (closeTimers[orderId]) 
-        {
-            clearTimeout(closeTimers[orderId]);
-            delete closeTimers[orderId];
-        }
-
+        if (closeTimers[orderId]) clearTimeout(closeTimers[orderId]);
         closeTimers[orderId] = setTimeout(async () => {
             karta.classList.add('znika');
-
             setTimeout(async () => {
                 await fetch(`/api/done/${orderId}`, { method: 'POST' });
                 delete closeTimers[orderId];
                 loadOrders();
             }, 600);
         }, 30000);
+    } 
+
+    else 
+    {
+        if (closeTimers[orderId]) 
+        {
+            clearTimeout(closeTimers[orderId]);
+            delete closeTimers[orderId];
+        }
     }
     
-    else
-    {
-        if(closeTimers[orderId])
-        {
-            clearTimeout(closeTimers[orderId])
-            delete closeTimers[orderId]
-        }
+    const menu = document.getElementById('menu-popup');
+    if (menu) menu.remove();
+}
 
-        loadOrders();
-    }
+/* przeliczenie koloru  */
 
-    document.getElementById('menu-popup').remove(); //zamyka menu
-    grouped[orderId].items.forEach(item => {
-        item.status = status;
-    });
+function ustawKolorNaglowka(orderId) 
+{
+    const karta = document.querySelector(`[data-id="${orderId}"]`);
+    if (!karta || !grouped[orderId]) return;
 
-    loadOrders();
+    const items = grouped[orderId].items || [];
+    if (!items.length) return;
+
+    const all2 = items.every(i => Number(i.status) === 2);
+    const all0 = items.every(i => Number(i.status) === 0);
+
+    const kolor = all2 ? '#2d8a4e' : all0 ? '#c0392b' : '#ff8c00';
+
+    const naglowek = karta.querySelector('.naglowek');
+    if (naglowek) naglowek.style.background = kolor;
 }
 
 /* aktualizuje timery na wszystkich kartach co sekunde */
