@@ -5,6 +5,7 @@ const closeTimers = {}; // orderId -> timeoutId
  - pobiera zamowienia z serwera i aktualizuje karty na ekranie
  - nowe karty sa dodawane a stare usuwane bez "migania' calej strony
  */
+
 async function loadOrders() 
 {
     const container = document.getElementById('orders');
@@ -15,9 +16,17 @@ async function loadOrders()
     const response = await fetch('/api/orders');
     const data = await response.json();
 
+    // zapisz lokalne statusy przed resetem
+    const lokalneStatusy = {};
+    Object.entries(grouped).forEach(([id, order]) => {
+        order.items.forEach(item => {
+            lokalneStatusy[item.id] = { status: item.status, done: item.done };
+        });
+    });
 
-    /* grupowanie wierszy z bazy po id zamowienia*/
+    // reset grouped
     grouped = {};
+
     data.forEach(row =>
     {   
         if (!grouped[row.id_pos_order]) 
@@ -30,14 +39,16 @@ async function loadOrders()
             }
         }
 
-        if (row.item_name) /*sprawdzanie czy wiersz ma nazwe pozycji (moze byc null jesli zamwienie jest puste)*/
+        if (row.item_name)
         {
+            const lokalny = lokalneStatusy[row.id_pos_order_line];
+            
             grouped[row.id_pos_order].items.push({
                 name: row.item_name,
                 parent: row.id_pos_order_line_parent, 
                 id: row.id_pos_order_line,
-                done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
-                status: row.kds_status == null ? 0 : Number(row.kds_status),
+                done: lokalny ? lokalny.done : (row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00'),
+                status: lokalny ? lokalny.status : (row.kds_status == null ? 0 : Number(row.kds_status)),
                 qty: row.qty,
                 category: row.item_category,
                 note: row.note
@@ -56,13 +67,14 @@ async function loadOrders()
 
         console.log('po loadOrders', id, order.items.map(i => i.status));
         
-        if (!div) 
-        {
-            div = document.createElement('div');
-            div.className = 'karta';
-            div.dataset.id = id; /* id zamowienia w html uzywane do wyszukiwania karty */
-            container.appendChild(div);
-        }
+    if (!div) 
+    {
+        div = document.createElement('div');
+        div.className = 'karta';
+        div.dataset.id = id;
+        container.appendChild(div);
+        div.style.animation = 'slide-in 0.1s ease'; // animacja tylko dla nowych kart
+    }
 
         const orderId = Number(id);
 
@@ -74,49 +86,7 @@ async function loadOrders()
 
         /* aktualizuj zawartosc karty przy kazdym odswiezeniu
          , pozycje moga znikac gdy kucharz je oznacza */
-        div.innerHTML = `
-                <div class="naglowek" onclick="gotowe(${orderId},${statusZamowienia} )" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative; background:${kolorNaglowka};"> <div>
-                    <h2 style="margin:0;">Zamówienie #${id}</h2>
-                    <span class="timer" data-start="${new Date(order.created_at).getTime()}" style="margin-left:8px;">00:00</span>
-                </div>
-                <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#C0C0C0; color:#000000; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
-            </div>
-            <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
-            <div class="tresc">
-                <p class="stol">Stół: ${order.name}</p>
-
-               ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => {
-
-                    item.qty = Number(item.qty);
-                    const fn = item.done || item.status == 2 ? 'undoLinia' : 'gotoweLinia';
-
-                    if (item.qty == 1)
-                    {
-                        return `
-                            <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}">
-                                ${item.name}
-                                ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
-                            </p>
-                        `;
-                    }
-
-                    else if (item.qty > 1)
-                    {
-                        const qty = item.qty;
-                        return `
-                            <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}display:flex; justify-content:space-between; align-items:center;">
-                                <span>${item.name}</span>
-                                ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
-                                <span style="margin-left:12px; font-weight:700;">${qty}x</span>
-                            </p>
-                        `;
-                    }
-
-                    return '';
-                }).join('')}
-
-            </div>
-        `;
+        renderKarta(div, orderId, order);
     });
 
     if(workMode)
@@ -165,17 +135,36 @@ async function gotoweLinia(lineId, orderId)
 
     ustawKolorNaglowka(orderId);
 
-    if (result.allServed) 
+    const div = document.querySelector(`[data-id="${orderId}"]`);
+    if (div && grouped[orderId] && !div.classList.contains('znika')) 
     {
-        if (closeTimers[result.orderId]) clearTimeout(closeTimers[result.orderId]);
-        closeTimers[result.orderId] = setTimeout(async () => {
-            await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
-            delete closeTimers[result.orderId];
-
-        }, 30000);
+        renderKarta(div, orderId, grouped[orderId]);
     }
 
-    loadOrders();
+    const p = document.querySelector(`[data-id="${orderId}"] p[onclick*="${lineId}"]`);
+
+    if (p) 
+    {
+        p.style.background = '#444';
+        p.style.color = '#888';
+    }
+
+    if (result.allServed) 
+    {
+        closeTimers[result.orderId] = setTimeout(async () => {
+            const karta = document.querySelector(`[data-id="${result.orderId}"]`);
+            console.log('karta:', karta, 'klasy PRZED:', karta?.className);
+            if (karta) {
+            karta.classList.add('znika');
+            console.log('klasy PO:', karta.className);
+            }
+            setTimeout(async () => {
+                await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
+                delete closeTimers[result.orderId];
+                loadOrders();
+            }, 600);
+        }, 30000); 
+    }
 }
 
         
@@ -208,6 +197,46 @@ async function undoLinia(lineId, orderId)
     const oid = result.orderId ?? orderId;
 
     loadOrders();
+}
+
+function renderKarta(div, orderId, order)
+{
+    const all2 = order.items.every(i => Number(i.status) === 2);
+    const all0 = order.items.every(i => Number(i.status) === 0);
+    const statusZamowienia = all2 ? 2 : all0 ? 0 : 1;
+    const kolorNaglowka = statusZamowienia === 2 ? '#2d8a4e' : statusZamowienia === 0 ? '#c0392b' : '#ff8c00';
+
+    div.innerHTML = `
+        <div class="naglowek" onclick="gotowe(${orderId},${statusZamowienia})" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; position:relative; background:${kolorNaglowka};">
+            <div>
+                <h2 style="margin:0;">Zamówienie #${orderId}</h2>
+                <span class="timer" data-start="${new Date(order.created_at).getTime()}" style="margin-left:8px;">00:00</span>
+            </div>
+            <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#C0C0C0; color:#000000; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
+        </div>
+        <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
+        <div class="tresc">
+            <p class="stol">Stół: ${order.name}</p>
+            ${[...order.items.filter(i => !i.done && i.status != 2), ...order.items.filter(i => i.done || i.status == 2)].map(item => {
+                item.qty = Number(item.qty);
+                const fn = item.done || item.status == 2 ? 'undoLinia' : 'gotoweLinia';
+                if (item.qty == 1) {
+                    return `
+                        <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}">
+                            ${item.name}
+                            ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
+                        </p>`;
+                } else {
+                    return `
+                        <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}display:flex; justify-content:space-between; align-items:center;">
+                            <span>${item.name}</span>
+                            ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
+                            <span style="margin-left:12px; font-weight:700;">${item.qty}x</span>
+                        </p>`;
+                }
+            }).join('')}
+        </div>
+    `;
 }
 
 function pokazPodsumowanie() 
