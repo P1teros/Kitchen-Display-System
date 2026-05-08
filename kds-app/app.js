@@ -5,7 +5,6 @@ const closeTimers = {}; // orderId -> timeoutId
  - pobiera zamowienia z serwera i aktualizuje karty na ekranie
  - nowe karty sa dodawane a stare usuwane bez "migania' calej strony
  */
-
 async function loadOrders() 
 {
     const container = document.getElementById('orders');
@@ -95,7 +94,10 @@ async function loadOrders()
     }
 }
 
-/* oznacza cale zamowienie jako gotowe ,najpierw odpala animacje znikania potem wysyla request do serwera  */
+/*
+ - oznacza cale zamowienie jako gotowe przez zmiane statusu na 2
+ - jesli zamowienie juz jest gotowe (status 2) - nic nie robi
+ */
 async function gotowe(id,statusZamowienia) 
 {
     console.log('gotowe klik', id, statusZamowienia, typeof statusZamowienia)
@@ -115,8 +117,9 @@ async function gotowe(id,statusZamowienia)
 }
 
 /*
-    1. oznacza pojedyncza pozycje jako gotowa
-    2. jesli to byla ostatnia pozycja - animuje znikniecie calej karty
+ - oznacza pojedyncza pozycje jako gotowa
+ - aktualizuje kolor naglowka i przerysowuje karte
+ - jesli wszystkie pozycje sa gotowe - uruchamia timer 30s po ktorym zamowienie znika
  */
 async function gotoweLinia(lineId, orderId) 
 {
@@ -163,11 +166,15 @@ async function gotoweLinia(lineId, orderId)
                 delete closeTimers[result.orderId];
                 loadOrders();
             }, 600);
-        }, 30000); 
+        }, 5000); 
     }
 }
 
-        
+/*
+ - cofa oznaczenie pozycji jako gotowej
+ - aktualizuje kolor naglowka na zolty lub czerwony
+ - anuluje timer znikania jesli byl ustawiony
+ */        
 async function undoLinia(lineId, orderId) 
 {
     // natychmiast lokalnie zmien stan (zeby od razu bylo zolte)
@@ -199,6 +206,11 @@ async function undoLinia(lineId, orderId)
     loadOrders();
 }
 
+/*
+ - buduje html karty zamowienia i wstawia do diva
+ - sortuje pozycje - niegotowe na gorze, gotowe na dole
+ - kolor naglowka zalezy od statusu zamowienia
+ */
 function renderKarta(div, orderId, order)
 {
     const all2 = order.items.every(i => Number(i.status) === 2);
@@ -238,6 +250,12 @@ function renderKarta(div, orderId, order)
         </div>
     `;
 }
+
+/*
+ - liczy ile sztuk kazdego produktu jest do zrobienia
+ - pomija pozycje ktore sa juz gotowe
+ - wyswietla wynik w okienku modal
+ */
 
 function pokazPodsumowanie() 
 {
@@ -279,6 +297,12 @@ function pokazPodsumowanie()
 
 let workMode = false;
 
+/*
+ - przelacza tryb pracy
+ - w trybie pracy pokazuje panel z podsumowaniem po lewej stronie
+ - chowa przycisk podsumowanie
+ */
+
 function trybPracy() 
 {
     workMode = !workMode;
@@ -302,6 +326,11 @@ function trybPracy()
         btnPodsumowanie.style.visibility = 'visible';
     }
 }
+
+/*
+ - liczy produkty do zrobienia z podzialem na kategorie
+ - aktualizuje panel po lewej stronie w trybie pracy
+ */
 
 function sumTrybPraca()
 {
@@ -347,6 +376,11 @@ function sumTrybPraca()
     panel.innerHTML = html;
 }
 
+/*
+ - pokazuje menu z opcjami zmiany statusu zamowienia
+ - jesli menu juz jest otwarte - zamyka je
+ */
+
 function pokazMenu(orderId, btn) 
 {
     // usun stare menu jesli istnieje
@@ -369,6 +403,12 @@ function pokazMenu(orderId, btn)
     
     btn.parentElement.appendChild(menu);  // dodaje menu obok przycisku ktory kliknalem 
 }
+
+/*
+ - zmienia status wszystkich pozycji zamowienia
+ - jesli status 2 - uruchamia timer 30s po ktorym zamowienie znika
+ - jesli inny status - anuluje timer jesli byl ustawiony
+ */
 
 async function zmienStatus(orderId, status) 
 {
@@ -419,7 +459,12 @@ async function zmienStatus(orderId, status)
     loadOrders();
 }
 
-/* przeliczenie koloru  */
+/*
+ - oblicza kolor naglowka na podstawie statusow pozycji
+ - czerwony: wszystkie status 0
+ - zolty: mieszane statusy
+ - zielony: wszystkie status 2
+ */
 
 function ustawKolorNaglowka(orderId) 
 {
