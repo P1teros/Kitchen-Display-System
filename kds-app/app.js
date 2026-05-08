@@ -15,7 +15,6 @@ async function loadOrders()
     const response = await fetch('/api/orders');
     const data = await response.json();
 
-    console.log(data[0]);
 
     /* grupowanie wierszy z bazy po id zamowienia*/
     grouped = {};
@@ -38,7 +37,7 @@ async function loadOrders()
                 parent: row.id_pos_order_line_parent, 
                 id: row.id_pos_order_line,
                 done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
-                status: row.kds_status,
+                status: row.kds_status == null ? 0 : Number(row.kds_status),
                 qty: row.qty,
                 category: row.item_category
             });
@@ -53,6 +52,8 @@ async function loadOrders()
     /* dla kazdego zamowienia - stworz nowa karte lub zaktualizuj istniejaca */
     Object.entries(grouped).forEach(([id, order]) => {
         let div = container.querySelector(`[data-id="${id}"]`);
+
+        console.log('po loadOrders', id, order.items.map(i => i.status));
         
         if (!div) 
         {
@@ -64,8 +65,11 @@ async function loadOrders()
 
         const orderId = Number(id);
 
-        const statusZamowienia = order.items.every(i => i.status == 2) ? 2 : order.items.some(i => i.status == 1) ? 1 : 0;
-        const kolorNaglowka = statusZamowienia == 2 ? '#2d8a4e' : statusZamowienia == 1 ? '#ff8c00' : '#c0392b';
+        const all2 = order.items.every(i => Number(i.status) === 2);
+        const all0 = order.items.every(i => Number(i.status) === 0);
+
+        const statusZamowienia = all2 ? 2 : all0 ? 0 : 1;
+        const kolorNaglowka = statusZamowienia === 2 ? '#2d8a4e' : statusZamowienia === 0 ? '#c0392b' : '#ff8c00';
 
         /* aktualizuj zawartosc karty przy kazdym odswiezeniu
          , pozycje moga znikac gdy kucharz je oznacza */
@@ -160,34 +164,42 @@ async function gotoweLinia(lineId, orderId)
         closeTimers[result.orderId] = setTimeout(async () => {
             await fetch(`/api/done/${result.orderId}`, { method: 'POST' });
             delete closeTimers[result.orderId];
-            loadOrders();
+
         }, 30000);
     }
 
     loadOrders();
 }
 
+        
 async function undoLinia(lineId, orderId) 
 {
-    const r = await fetch(`/api/undo/line/${lineId}`, { method: 'POST' });
-    const result = await r.json();
-    const oid = result.orderId ?? orderId;
-
-    if (grouped[oid]) 
+    // natychmiast lokalnie zmien stan (zeby od razu bylo zolte)
+    if (grouped[orderId]) 
+    {
+        const item = grouped[orderId].items.find(i => i.id == lineId);
+        if (item) 
         {
-        const item = grouped[oid].items.find(i => i.id == lineId);
-        if (item) {
             item.done = false;
             item.status = 0;
+            console.log('po undo lokalnie', grouped[orderId].items.map(i => i.status));
         }
     }
 
-    if (closeTimers[oid]) {
-        clearTimeout(closeTimers[oid]);
-        delete closeTimers[oid];
+    if (closeTimers[orderId]) 
+    {
+        clearTimeout(closeTimers[orderId]);
+        delete closeTimers[orderId];
     }
 
-    ustawKolorNaglowka(oid);
+    ustawKolorNaglowka(orderId); // od razu zmienia naglowek na zolty/czerwony
+
+    const r = await fetch(`/api/undo/line/${lineId}`, { method: 'POST' });
+    const result = await r.json();
+    console.log('undo response', result);
+
+    const oid = result.orderId ?? orderId;
+
     loadOrders();
 }
 
@@ -331,8 +343,7 @@ async function zmienStatus(orderId, status)
 {
     // zmien status wszystkich pozycji zamowienia 
     const karta = document.querySelector(`[data-id="${orderId}"]`);
-    const pozycje = karta.querySelectorAll('.tresc p:not(.stol)');
-    
+
     // wyslij request dla kazdej pozycji
     const items = grouped[orderId].items;
     for (const item of items) 
@@ -370,9 +381,11 @@ async function zmienStatus(orderId, status)
             delete closeTimers[orderId];
         }
     }
-    
+
     const menu = document.getElementById('menu-popup');
     if (menu) menu.remove();
+
+    loadOrders();
 }
 
 /* przeliczenie koloru  */
@@ -383,6 +396,7 @@ function ustawKolorNaglowka(orderId)
     if (!karta || !grouped[orderId]) return;
 
     const items = grouped[orderId].items || [];
+    console.log('statusy po kliknieciu:', items.map(i => i.status));
     if (!items.length) return;
 
     const all2 = items.every(i => Number(i.status) === 2);
