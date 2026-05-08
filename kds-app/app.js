@@ -54,7 +54,8 @@ async function loadOrders()
     Object.entries(grouped).forEach(([id, order]) => {
         let div = container.querySelector(`[data-id="${id}"]`);
         
-        if (!div) {
+        if (!div) 
+        {
             div = document.createElement('div');
             div.className = 'karta';
             div.dataset.id = id; /* id zamowienia w html uzywane do wyszukiwania karty */
@@ -73,16 +74,36 @@ async function loadOrders()
                     <h2 style="margin:0;">Zamówienie #${id}</h2>
                     <span class="timer" data-start="${new Date(order.created_at).getTime()}" style="margin-left:8px;">00:00</span>
                 </div>
-                <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#C0C0C0; color:#zzz; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
+                <button onclick="event.stopPropagation(); pokazMenu(${orderId}, this)" style="background:#C0C0C0; color:#000000; border:none; border-radius:6px; padding:10px 30px; cursor:pointer; font-size:1.4rem;">⋯</button>
             </div>
             <p class="godzina">${new Date(order.created_at).toLocaleTimeString('pl-PL')}</p>
             <div class="tresc">
                 <p class="stol">Stół: ${order.name}</p>
 
-                ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => {
-                    const fn = item.done ? 'undoLinia' : 'gotoweLinia';
-                    return `<p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done ? 'background:#444; color:#888;' : ''}">${item.name}</p>`;
+               ${[...order.items.filter(i => !i.done), ...order.items.filter(i => i.done)].map(item => {
+
+                    item.qty = Number(item.qty);
+                    const fn = item.done || item.status == 2 ? 'undoLinia' : 'gotoweLinia';
+
+                    if (item.qty == 1)
+                    {
+                        return `<p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}">${item.name}</p>`;
+                    }
+
+                    else if (item.qty > 1)
+                    {
+                        const qty = item.qty;
+                        return `
+                            <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}display:flex; justify-content:space-between; align-items:center;">
+                                <span>${item.name}</span>
+                                <span style="margin-left:12px; font-weight:700;">${qty}x</span>
+                            </p>
+                        `;
+                    }
+
+                    return '';
                 }).join('')}
+
             </div>
         `;
     });
@@ -105,6 +126,7 @@ async function gotowe(id,statusZamowienia)
         {
             const naglowek = karta.querySelector('.naglowek');
             naglowek.style.background = '#2d8a4e';
+            
             
             await zmienStatus(id,2);
         }
@@ -165,27 +187,24 @@ async function undoLinia(lineId, orderId)
 
 function pokazPodsumowanie() 
 {
-    const summed = {}; 
+    let summed = {}; 
 
 // przechodzenie przez grouped i zsumowanie ilosci
-    Object.entries(grouped).forEach(([id, order]) => {
+    Object.entries(grouped).forEach(([orderId, order]) => {
         order.items.forEach(item => {
+            if (item.done) return;
 
-            if (item.done)
+            const itemName = item.name;
+            const qty = Number(item.qty) || 0;
+
+            if (!summed[itemName]) 
             {
-                return;    
+                summed[itemName] = 0;
             }
-            
-            if (summed[item.name]) 
-            {
-                summed[item.name]++;
-            }
-            else
-            {
-                summed[item.name] = 1;
-            }
+            summed[itemName] += qty;
         });
     });
+
     // pokazanie wyniku w okienku
     let tekst = '';
     Object.entries(summed).forEach(([nazwa, ilosc]) => {
@@ -257,14 +276,14 @@ function sumTrybPraca()
     for (const category in summary) 
     {
         html += '<div style="margin-bottom:16px;">';
-        html += `<h3 style="margin:0 0 8px; color:#ffb347;">${category}</h3>`;
+        html += `<h3 style="margin:0 0 4px; color:#ffb347"; font-size:1rem>${category}</h3>`;
 
         const products = summary[category];
 
         for (const name in products) 
         {
             const qty = products[name];
-            html += `<p style="margin:4px 0;">${name}: ${qty}</p>`;
+            html += `<p style="margin:4px 0; font-size:0.9rem">${name}: ${qty}</p>`;
         }
 
         html += '</div>';
@@ -313,6 +332,9 @@ async function zmienStatus(orderId, status)
         await fetch(`/api/status/line/${item.id}/${status}`, { method: 'POST' });
     }
 
+    grouped[orderId].items = 2;
+    loadOrders();
+
     if (status === 2) 
     {
         const naglowek = karta.querySelector('.naglowek');
@@ -331,6 +353,7 @@ async function zmienStatus(orderId, status)
     {
         loadOrders();
     }
+
     document.getElementById('menu-popup').remove(); //zamyka menu
     grouped[orderId].items.forEach(item => {
         item.status = status;
