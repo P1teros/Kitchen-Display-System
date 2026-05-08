@@ -339,18 +339,32 @@ async function zmienStatus(orderId, status)
     {
         const naglowek = karta.querySelector('.naglowek');
         naglowek.style.background = '#2d8a4e';
-        
-        setTimeout(async() => {
+
+        if (closeTimers[orderId]) 
+        {
+            clearTimeout(closeTimers[orderId]);
+            delete closeTimers[orderId];
+        }
+
+        closeTimers[orderId] = setTimeout(async () => {
             karta.classList.add('znika');
-            setTimeout(async() => {
-                await fetch(`/api/done/${orderId}`, { method: 'POST' });  
-                loadOrders();   
+
+            setTimeout(async () => {
+                await fetch(`/api/done/${orderId}`, { method: 'POST' });
+                delete closeTimers[orderId];
+                loadOrders();
             }, 600);
         }, 30000);
     }
     
     else
     {
+        if(closeTimers[orderId])
+        {
+            clearTimeout(closeTimers[orderId])
+            delete closeTimers[orderId]
+        }
+
         loadOrders();
     }
 
