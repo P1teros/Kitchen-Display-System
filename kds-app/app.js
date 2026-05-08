@@ -166,7 +166,7 @@ async function gotoweLinia(lineId, orderId)
                 delete closeTimers[result.orderId];
                 loadOrders();
             }, 600);
-        }, 5000); 
+        }, 30000); 
     }
 }
 
@@ -232,18 +232,23 @@ function renderKarta(div, orderId, order)
             ${[...order.items.filter(i => !i.done && i.status != 2), ...order.items.filter(i => i.done || i.status == 2)].map(item => {
                 item.qty = Number(item.qty);
                 const fn = item.done || item.status == 2 ? 'undoLinia' : 'gotoweLinia';
-                if (item.qty == 1) {
+                if (item.qty == 1) 
+                {
                     return `
                         <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}">
                             ${item.name}
                             ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
                         </p>`;
-                } else {
+                } 
+                else 
+                {
                     return `
-                        <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}display:flex; justify-content:space-between; align-items:center;">
-                            <span>${item.name}</span>
-                            ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
-                            <span style="margin-left:12px; font-weight:700;">${item.qty}x</span>
+                        <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}display:flex; justify-content:space-between; align-items:flex-start;">
+                            <span style="display:flex; flex-direction:column; min-width:0;">
+                                <span>${item.name}</span>
+                                ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
+                            </span>
+                            <span style="margin-left:12px; font-weight:700; white-space:nowrap;">${item.qty}x</span>
                         </p>`;
                 }
             }).join('')}
