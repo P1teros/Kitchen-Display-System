@@ -39,7 +39,8 @@ async function loadOrders()
                 done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
                 status: row.kds_status == null ? 0 : Number(row.kds_status),
                 qty: row.qty,
-                category: row.item_category
+                category: row.item_category,
+                note: row.note
             });
         } 
     });
@@ -91,7 +92,12 @@ async function loadOrders()
 
                     if (item.qty == 1)
                     {
-                        return `<p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}">${item.name}</p>`;
+                        return `
+                            <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}">
+                                ${item.name}
+                                ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
+                            </p>
+                        `;
                     }
 
                     else if (item.qty > 1)
@@ -100,6 +106,7 @@ async function loadOrders()
                         return `
                             <p onclick="${fn}(${item.id}, ${orderId})" style="cursor:pointer; ${item.done || item.status == 2 ? 'background:#444; color:#888;' : ''}display:flex; justify-content:space-between; align-items:center;">
                                 <span>${item.name}</span>
+                                ${item.note ? `<small style="color:#ced5d6; font-size:0.9rem; display:block; padding:2px 0;">${item.note}</small>` : ''}
                                 <span style="margin-left:12px; font-weight:700;">${qty}x</span>
                             </p>
                         `;
