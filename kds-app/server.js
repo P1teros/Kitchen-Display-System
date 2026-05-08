@@ -34,7 +34,7 @@ app.get('/api/orders', async (req, res) => {
         l.id_pos_order_line_parent,
         l.id_pos_order_line,
         l.kds_served,
-        l.kds_status
+        l.kds_status,
         g.name AS item_category
         
         FROM pos_order o
