@@ -233,7 +233,10 @@ function pokazPodsumowanie()
     const tresc = document.getElementById('modal-tresc');
     
     tresc.innerHTML = Object.entries(summed)
-        .map(([nazwa, ilosc]) => `<p style="font-size:0.9rem; padding:10px 10px; margin:2px 0;">${nazwa}: ${ilosc}</p>`)
+        .map(([nazwa, ilosc]) => `<p style="display:flex; justify-content:space-between; align-items:center; font-size:0.9rem;">
+                        <span>${nazwa}</span>
+                        <span style="margin-left:12px; font-weight:700;">${ilosc}x</span>
+                    </p>`)
         .join('');
     modal.style.display = 'flex';
 }
@@ -279,15 +282,9 @@ function sumTrybPraca()
             const itemName = item.name;
             const qty = Number(item.qty) || 0;
 
-            if (!summary[category]) 
-            {
-                summary[category] = {};
-            }
+            if (!summary[category]) summary[category] = {};
+            if (!summary[category][itemName]) summary[category][itemName] = 0;
 
-            if (!summary[category][itemName]) 
-            {
-                summary[category][itemName] = 0;
-            }
             summary[category][itemName] += qty;
         });
     });
@@ -296,23 +293,21 @@ function sumTrybPraca()
     for (const category in summary) 
     {
         html += '<div style="margin-bottom:16px;">';
-        html += `<h3 style="margin:0 0 4px; color:#ffb347"; font-size:1rem>${category}</h3>`;
+        html += `<h3 style="margin:0 0 4px; color:#ffb347; font-size:1.1rem;">${category}</h3>`;
 
-        const products = summary[category];
-
-        for (const name in products) 
+        for (const [name, qty] of Object.entries(summary[category])) 
         {
-            const qty = products[name];
-            html += `<p style="margin:4px 0; font-size:0.9rem">${name}: ${qty}</p>`;
+            html += `<p style="display:flex; justify-content:space-between; align-items:center;font-size:0.9rem">
+                        <span>${name}</span>
+                        <span style="margin-left:12px; font-weight:700;">${qty}x</span>
+                     </p>`;
         }
 
         html += '</div>';
     }
             
-    if (html === '') 
-    {
-        html = '<p>Brak pozycji do przygotowania.</p>';
-    }
+    if (html === '') html = '<p>Brak pozycji do przygotowania.</p>';
+
     panel.innerHTML = html;
 }
 
