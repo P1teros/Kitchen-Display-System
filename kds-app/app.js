@@ -40,7 +40,7 @@ async function loadOrders()
                 done: row.kds_served != null && row.kds_served !== '0000-00-00 00:00:00',
                 status: row.kds_status,
                 qty: row.qty,
-                category: row.item_categ
+                category: row.item_category
             });
         } 
     });
@@ -86,6 +86,11 @@ async function loadOrders()
             </div>
         `;
     });
+
+    if(workMode)
+    {
+        sumTrybPraca();
+    }
 }
 
 /* oznacza cale zamowienie jako gotowe ,najpierw odpala animacje znikania potem wysyla request do serwera  */
@@ -96,7 +101,7 @@ async function gotowe(id,statusZamowienia)
 
     if (karta)
     {
-        if (status != 2) 
+        if (statusZamowienia != 2) 
         {
             const naglowek = karta.querySelector('.naglowek');
             naglowek.style.background = '#2d8a4e';
@@ -202,49 +207,25 @@ function trybPracy()
 {
     workMode = !workMode;
 
-    const btn = document.getElementById('btn-tryb-pracy');
+    const btnPodsumowanie = document.getElementById('btn-podsumowanie');
+    const btnTrybPracy    = document.getElementById('btn-tryb-pracy');
 
     if (workMode) 
     {
-        btn.textContent = 'TRYB PRACY: WŁ.';
+        btnTrybPracy.textContent = 'TRYB PRACY: WŁ.';
         document.body.classList.add('work-mode');
-        
-        const summed = {}; 
 
-        // przechodzenie przez grouped i zsumowanie ilosci
-        Object.entries(grouped).forEach(([id, order]) => {
-            order.items.forEach(item => {
-
-                if (item.done)
-                {
-                    return;    
-                }
-                
-                if (summed[item.name]) 
-                {
-                    summed[item.name]++;
-                }
-                else
-                {
-                    summed[item.name] = 1;
-                }
-            });
-        });
-        // pokazanie wyniku w okienku
-        let tekst = '';
-        Object.entries(summed).forEach(([nazwa, ilosc]) => {
-            tekst += nazwa + ': ' + ilosc + '\n'; 
-        });
-
+        btnPodsumowanie.style.visibility = 'hidden';
+        sumTrybPraca();
     } 
-
     else 
     {
-        btn.textContent = 'TRYB PRACY: WYŁ.';
+        btnTrybPracy.textContent = 'TRYB PRACY: WYŁ.';
         document.body.classList.remove('work-mode');
+
+        btnPodsumowanie.style.visibility = 'visible';
     }
 }
-
 function sumTrybPraca()
 {
     const panel = document.getElementById('summary-panel-content');
@@ -287,16 +268,13 @@ function sumTrybPraca()
         }
 
         html += '</div>';
-
-        
-        if (html === '') 
-        {
-            html = '<p>Brak pozycji do przygotowania.</p>';
-        }
-        panel.innerHTML = html;
     }
-
-
+            
+    if (html === '') 
+    {
+        html = '<p>Brak pozycji do przygotowania.</p>';
+    }
+    panel.innerHTML = html;
 }
 
 function pokazMenu(orderId, btn) 
