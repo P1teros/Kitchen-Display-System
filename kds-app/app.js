@@ -4,6 +4,7 @@ const closeTimers = {}; // orderId -> timeoutId
 /* 
  - pobiera zamowienia z serwera i aktualizuje karty na ekranie
  - nowe karty sa dodawane a stare usuwane bez "migania' calej strony
+ 
  */
 async function loadOrders() 
 {
