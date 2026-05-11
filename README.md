@@ -9,7 +9,7 @@ A real-time kitchen display system built with Node.js and Express, connected to 
 - **Full Order Dismissal:** Tapping the order header marks the entire order as served and removes it from the display.
 - **Modifier Support:** Displays item modifiers (e.g. meal components) grouped under their parent item.
 - **Smooth Animations:** New orders slide in with a CSS animation. Items highlight on hover for intuitive interaction.
-- **No Scrolling:** The UI is designed to fit entirely on screen — no swiping or scrolling required.
+- **No Scrolling:** The UI is designed to fit entirely on screen — no swiping or scrolling required
 
 ## Tech Stack
 
