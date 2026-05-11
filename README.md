@@ -23,7 +23,7 @@ A lightweight kitchen display for restaurants. It reads active POS orders from *
 | Server | Express 5 |
 | Database | MariaDB via `mariadb` connection pool |
 | Config | `dotenv` — credentials and port from environment |
-| Client | Static `index.html`, `styles.css`, `app.js` |
+
 
 ## Requirements
 
